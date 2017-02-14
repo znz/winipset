@@ -28,11 +28,15 @@ func processLinesShiftJIS(lineProcessor func(string), r io.Reader) {
 }
 
 func outputStdout(line string) {
-	log.Println("o:", line)
+	if line != "" {
+		log.Println("o:", line)
+	}
 }
 
 func outputStderr(line string) {
-	log.Println("e:", line)
+	if line != "" {
+		log.Println("e:", line)
+	}
 }
 
 func runCommand(stdoutHandler, stderrHandler func(string), name string, arg ...string) (err error) {
