@@ -35,24 +35,24 @@ func outputStderr(line string) {
 	log.Println("e:", line)
 }
 
-func runCommand(stdoutHandler, stderrHandler func(string), name string, arg ...string) error {
+func runCommand(stdoutHandler, stderrHandler func(string), name string, arg ...string) (err error) {
 	cmd := exec.Command(name, arg...)
 	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		log.Println("StdoutPipe:", err)
-		return err
+		return
 	}
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
 		log.Println("StderrPipe:", err)
-		return err
+		return
 	}
 
 	err = cmd.Start()
 	if err != nil {
 		log.Println("Start:", err)
-		return err
+		return
 	}
 
 	go processLinesShiftJIS(stdoutHandler, stdout)
@@ -61,7 +61,7 @@ func runCommand(stdoutHandler, stderrHandler func(string), name string, arg ...s
 	err = cmd.Wait()
 	if err != nil {
 		log.Println("Wait:", err)
-		return err
+		return
 	}
 	return nil
 }
