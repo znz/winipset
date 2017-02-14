@@ -18,97 +18,94 @@ import (
 	"golang.org/x/text/encoding/japanese"
 )
 
-func getInterfaces(mw *MyMainWindow) {
-	cmd := exec.Command("netsh", "interface", "ip", "show", "interfaces")
+func processLinesShiftJIS(lineProcessor func(string), r io.Reader) {
+	decoder := japanese.ShiftJIS.NewDecoder()
+	scanner := bufio.NewScanner(decoder.Reader(r))
+	for scanner.Scan() {
+		line := scanner.Text()
+		lineProcessor(line)
+	}
+}
+
+func outputStdout(line string) {
+	log.Println("o:", line)
+}
+
+func outputStderr(line string) {
+	log.Println("e:", line)
+}
+
+func runCommand(stdoutHandler, stderrHandler func(string), name string, arg ...string) error {
+	cmd := exec.Command(name, arg...)
 	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		log.Println(err)
+		log.Println("StdoutPipe:", err)
+		return err
 	}
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		log.Println(err)
-		return
+		log.Println("StderrPipe:", err)
+		return err
 	}
 
-	if err = cmd.Start(); err != nil {
-		log.Println(err)
-		return
+	err = cmd.Start()
+	if err != nil {
+		log.Println("Start:", err)
+		return err
 	}
 
-	go printOutput(stderr)
+	go processLinesShiftJIS(stdoutHandler, stdout)
+	go processLinesShiftJIS(stderrHandler, stderr)
 
-	decoder := japanese.ShiftJIS.NewDecoder()
-	scanner := bufio.NewScanner(decoder.Reader(stdout))
-	re := regexp.MustCompile(`\s+`)
+	err = cmd.Wait()
+	if err != nil {
+		log.Println("Wait:", err)
+		return err
+	}
+	return nil
+}
+
+var spacesRe = regexp.MustCompile(`\s+`)
+
+func getInterfaces(mw *MyMainWindow) {
+	log.Printf("インターフェイス一覧を取得します。")
 	interfaces := []string{}
-	for scanner.Scan() {
-		line := scanner.Text()
-		a := re.Split(strings.TrimSpace(line), 5)
+	err := runCommand(func(line string) {
+		outputStdout(line)
+		a := spacesRe.Split(strings.TrimSpace(line), 5)
 		if len(a) == 5 && (a[3] == "connected" || a[3] == "disconnected") {
 			if strings.Contains(a[4], "Loopback") {
-				continue
+				return
 			}
 			interfaces = append(interfaces, a[4])
 		}
-	}
-	log.Printf("%q", interfaces)
-
-	if err = cmd.Wait(); err != nil {
-		log.Println(err)
+	}, outputStderr, "netsh", "interface", "ip", "show", "interfaces")
+	if err != nil {
 		return
 	}
 	mw.interfaces = interfaces
 	mw.lb.SetModel(mw.interfaces)
 	mw.lb.SetCurrentIndex(0)
-}
-
-func printOutput(r io.Reader) {
-	decoder := japanese.ShiftJIS.NewDecoder()
-	scanner := bufio.NewScanner(decoder.Reader(r))
-	for scanner.Scan() {
-		line := scanner.Text()
-		if line != "" {
-			log.Print(line)
-		}
-	}
-}
-
-func runCommand(message, name string, arg ...string) {
-	cmd := exec.Command(name, arg...)
-	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	if err = cmd.Start(); err != nil {
-		log.Println(err)
-		return
-	}
-
-	go printOutput(stdout)
-	go printOutput(stderr)
-
-	if err = cmd.Wait(); err != nil {
-		log.Println(err)
-		return
-	}
-	log.Println(message)
+	log.Printf("インターフェイス一覧を取得しました。%q", interfaces)
 }
 
 func setDhcp(iface string) {
-	runCommand(fmt.Sprintf("%sをDHCPに設定しました。", iface), "netsh", "interface", "ip", "set", "address", iface, "dhcp")
+	log.Printf("%sをDHCPに設定します。", iface)
+	err := runCommand(outputStdout, outputStderr, "netsh", "interface", "ip", "set", "address", iface, "dhcp")
+	if err != nil {
+		return
+	}
+	log.Printf("%sをDHCPに設定しました。", iface)
 }
 
 func setStatic(iface, ip string) {
-	runCommand(fmt.Sprintf("%sを%sに設定しました。", iface, ip), "netsh", "interface", "ip", "set", "address", iface, "static", ip, "255.255.255.0")
+	log.Printf("%sを%sに設定します。", iface, ip)
+	err := runCommand(outputStdout, outputStderr, "netsh", "interface", "ip", "set", "address", iface, "static", ip, "255.255.255.0")
+	if err != nil {
+		return
+	}
+	log.Printf("%sを%sに設定しました。", iface, ip)
 }
 
 type MyMainWindow struct {
