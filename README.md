@@ -10,6 +10,10 @@
 - `rsrc -manifest winipset.manifest -o rsrc.syso`
 - `GOOS=windows go build -ldflags="-H windowsgui"`
 
+## How to use
+
+- ドメイン環境などで管理者権限が得られない場合は、ローカルの Network Configuration Operators のグループに所属すれば IP アドレスの変更ができます。
+
 ## LICENSE
 
 - logview.go: BSD-style license (original is https://github.com/lxn/walk/blob/050d2729e78b39c5bc8335e744758910f2c7a6c2/examples/logview/logview.go )
