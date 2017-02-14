@@ -7,7 +7,7 @@
 - `GOOS=windows go get github.com/lxn/walk`
 - `GOOS=windows go get golang.org/x/text/encoding/japanese`
 - `go get github.com/akavel/rsrc`
-- `rsrc -manifest test.manifest -o rsrc.syso`
+- `rsrc -manifest winipset.manifest -o rsrc.syso`
 - `GOOS=windows go build -ldflags="-H windowsgui"`
 
 ## LICENSE
