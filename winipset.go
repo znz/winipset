@@ -131,6 +131,7 @@ func getInterface(mw *MyMainWindow) (string, error) {
 func main() {
 	mw := &MyMainWindow{}
 	ip_addresses := []string{
+		"192.168.0.1",
 		"192.168.1.2",
 		"192.168.3.2",
 		"192.168.10.2",
