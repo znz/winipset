@@ -9,6 +9,7 @@
 - `go get github.com/akavel/rsrc`
 - `rsrc -manifest winipset.manifest -o rsrc.syso`
 - `GOOS=windows go build -ldflags="-H windowsgui"`
+- `GOOS=windows GOARCH=386 go build -ldflags="-H windowsgui" -o winipset32.exe`
 
 ## How to use
 
