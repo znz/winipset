@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
+	"sync"
 	"syscall"
 )
 
@@ -18,13 +19,14 @@ import (
 	"golang.org/x/text/encoding/japanese"
 )
 
-func processLinesShiftJIS(lineProcessor func(string), r io.Reader) {
+func processLinesShiftJIS(lineProcessor func(string), r io.Reader, wg *sync.WaitGroup) {
 	decoder := japanese.ShiftJIS.NewDecoder()
 	scanner := bufio.NewScanner(decoder.Reader(r))
 	for scanner.Scan() {
 		line := scanner.Text()
 		lineProcessor(line)
 	}
+	wg.Done()
 }
 
 func outputStdout(line string) {
@@ -59,8 +61,11 @@ func runCommand(stdoutHandler, stderrHandler func(string), name string, arg ...s
 		return
 	}
 
-	go processLinesShiftJIS(stdoutHandler, stdout)
-	go processLinesShiftJIS(stderrHandler, stderr)
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go processLinesShiftJIS(stdoutHandler, stdout, &wg)
+	go processLinesShiftJIS(stderrHandler, stderr, &wg)
+	wg.Wait()
 
 	err = cmd.Wait()
 	if err != nil {
