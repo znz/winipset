@@ -86,6 +86,7 @@ func getInterfaces(mw *MyMainWindow) {
 		}
 	}, outputStderr, "netsh", "interface", "ip", "show", "interfaces")
 	if err != nil {
+		log.Printf("インターフェイス一覧の取得に失敗しました。")
 		return
 	}
 	mw.interfaces = interfaces
@@ -98,6 +99,7 @@ func setDhcp(iface string) {
 	log.Printf("%sをDHCPに設定します。", iface)
 	err := runCommand(outputStdout, outputStderr, "netsh", "interface", "ip", "set", "address", iface, "dhcp")
 	if err != nil {
+		log.Printf("%sをDHCPに設定できませんでした。", iface)
 		return
 	}
 	log.Printf("%sをDHCPに設定しました。", iface)
@@ -107,6 +109,7 @@ func setStatic(iface, ip string) {
 	log.Printf("%sを%sに設定します。", iface, ip)
 	err := runCommand(outputStdout, outputStderr, "netsh", "interface", "ip", "set", "address", iface, "static", ip, "255.255.255.0")
 	if err != nil {
+		log.Printf("%sを固定IPに設定できませんでした。", iface)
 		return
 	}
 	log.Printf("%sを%sに設定しました。", iface, ip)
