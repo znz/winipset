@@ -29,7 +29,7 @@ rsrc.syso: winipset.manifest $(GOPATH)/bin/rsrc
 	$(GOPATH)/bin/rsrc -manifest winipset.manifest -o rsrc.syso
 
 winipset$(suffix).exe: rsrc.syso *.go depends
-	go build -ldflags="-s -H windowsgui" -o $@
+	go build -ldflags="-s -H windowsgui -X main.version=$(shell git describe --tags)" -o $@
 
 winipset_$(GOOS)_$(GOARCH).zip: winipset$(suffix).exe
 	7z a $@ $<

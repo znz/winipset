@@ -19,6 +19,8 @@ import (
 	"golang.org/x/text/encoding/japanese"
 )
 
+var version string
+
 func processLinesShiftJIS(lineProcessor func(string), r io.Reader, wg *sync.WaitGroup) {
 	decoder := japanese.ShiftJIS.NewDecoder()
 	scanner := bufio.NewScanner(decoder.Reader(r))
@@ -199,6 +201,7 @@ func main() {
 	}
 
 	log.SetOutput(lv)
+	log.Println("winipset バージョン", version)
 
 	go getInterfaces(mw)
 
