@@ -4,12 +4,8 @@
 
 ## How to build
 
-- `GOOS=windows go get github.com/lxn/walk`
-- `GOOS=windows go get golang.org/x/text/encoding/japanese`
-- `go get github.com/akavel/rsrc`
-- `rsrc -manifest winipset.manifest -o rsrc.syso`
-- `GOOS=windows go build -ldflags="-s -H windowsgui"`
-- `GOOS=windows GOARCH=386 go build -ldflags="-s -H windowsgui" -o winipset32.exe`
+- `make`
+- `make GOARCH=amd64`
 
 ## How to use
 
