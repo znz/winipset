@@ -138,6 +138,24 @@ func getInterface(mw *MyMainWindow) (string, error) {
 	return mw.interfaces[mw.lb.CurrentIndex()], nil
 }
 
+func (mw *MyMainWindow) setStatic() {
+	iface, err := getInterface(mw)
+	if err != nil {
+		walk.MsgBox(mw, "エラー", fmt.Sprint(err), walk.MsgBoxIconError)
+		return
+	}
+	go setStatic(iface, mw.cb.Text())
+}
+
+func (mw *MyMainWindow) setDhcp() {
+	iface, err := getInterface(mw)
+	if err != nil {
+		walk.MsgBox(mw, "エラー", fmt.Sprint(err), walk.MsgBoxIconError)
+		return
+	}
+	go setDhcp(iface)
+}
+
 func main() {
 	mw := &MyMainWindow{}
 	ip_addresses := []string{
@@ -161,28 +179,19 @@ func main() {
 				AssignTo: &mw.cb,
 				Editable: true,
 				Model:    ip_addresses,
-			},
-			PushButton{
-				Text: "固定IP設定",
-				OnClicked: func() {
-					iface, err := getInterface(mw)
-					if err != nil {
-						walk.MsgBox(mw, "エラー", fmt.Sprint(err), walk.MsgBoxIconError)
-						return
+				OnKeyPress: func(k walk.Key) {
+					if k == walk.KeyReturn {
+						mw.setStatic()
 					}
-					go setStatic(iface, mw.cb.Text())
 				},
 			},
 			PushButton{
-				Text: "DHCP設定",
-				OnClicked: func() {
-					iface, err := getInterface(mw)
-					if err != nil {
-						walk.MsgBox(mw, "エラー", fmt.Sprint(err), walk.MsgBoxIconError)
-						return
-					}
-					go setDhcp(iface)
-				},
+				Text:      "固定IP設定",
+				OnClicked: mw.setStatic,
+			},
+			PushButton{
+				Text:      "DHCP設定",
+				OnClicked: mw.setDhcp,
 			},
 			PushButton{
 				Text: "インターフェイス一覧再取得",
