@@ -82,6 +82,7 @@ var spacesRe = regexp.MustCompile(`\s+`)
 func (mw *MyMainWindow) getInterfaces() {
 	log.Printf("インターフェイス一覧を取得します。")
 	interfaces := []string{}
+	index, select_index := 0, 0
 	err := runCommand(func(line string) {
 		outputStdout(line)
 		a := spacesRe.Split(strings.TrimSpace(line), 5)
@@ -90,6 +91,10 @@ func (mw *MyMainWindow) getInterfaces() {
 				return
 			}
 			interfaces = append(interfaces, a[4])
+			if strings.Contains(a[4], "ローカル エリア接続") {
+				select_index = index
+			}
+			index += 1
 		}
 	}, outputStderr, "netsh", "interface", "ip", "show", "interfaces")
 	if err != nil {
@@ -98,7 +103,7 @@ func (mw *MyMainWindow) getInterfaces() {
 	}
 	mw.interfaces = interfaces
 	mw.lb.SetModel(mw.interfaces)
-	mw.lb.SetCurrentIndex(0)
+	mw.lb.SetCurrentIndex(select_index)
 	log.Printf("インターフェイス一覧を取得しました。%q", interfaces)
 }
 
