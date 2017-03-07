@@ -112,7 +112,7 @@ func setDhcp(iface string) {
 	log.Printf("%sをDHCPに設定しました。", iface)
 }
 
-func setStatic(iface, ip string) {
+func setStatic(iface, ip string, callback func(string)) {
 	log.Printf("%sを%sに設定します。", iface, ip)
 	err := runCommand(outputStdout, outputStderr, "netsh", "interface", "ip", "set", "address", iface, "static", ip, "255.255.255.0")
 	if err != nil {
@@ -120,6 +120,7 @@ func setStatic(iface, ip string) {
 		return
 	}
 	log.Printf("%sを%sに設定しました。", iface, ip)
+	callback(ip)
 }
 
 type MyMainWindow struct {
@@ -138,13 +139,28 @@ func getInterface(mw *MyMainWindow) (string, error) {
 	return mw.interfaces[mw.lb.CurrentIndex()], nil
 }
 
+func (mw *MyMainWindow) appendIp(ip string) {
+	ip_addresses, ok := mw.cb.Model().([]string)
+	if !ok {
+		walk.MsgBox(mw, "内部エラー", "ip_addresses 取得エラー", walk.MsgBoxIconError)
+		return
+	}
+	for _, x := range ip_addresses {
+		if x == ip {
+			return
+		}
+	}
+	mw.cb.SetModel(append(ip_addresses, ip))
+	mw.cb.SetCurrentIndex(len(ip_addresses))
+}
+
 func (mw *MyMainWindow) setStatic() {
 	iface, err := getInterface(mw)
 	if err != nil {
 		walk.MsgBox(mw, "エラー", fmt.Sprint(err), walk.MsgBoxIconError)
 		return
 	}
-	go setStatic(iface, mw.cb.Text())
+	go setStatic(iface, mw.cb.Text(), mw.appendIp)
 }
 
 func (mw *MyMainWindow) setDhcp() {
