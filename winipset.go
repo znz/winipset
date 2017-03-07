@@ -79,7 +79,7 @@ func runCommand(stdoutHandler, stderrHandler func(string), name string, arg ...s
 
 var spacesRe = regexp.MustCompile(`\s+`)
 
-func getInterfaces(mw *MyMainWindow) {
+func (mw *MyMainWindow) getInterfaces() {
 	log.Printf("インターフェイス一覧を取得します。")
 	interfaces := []string{}
 	err := runCommand(func(line string) {
@@ -131,7 +131,7 @@ type MyMainWindow struct {
 	interfaces []string
 }
 
-func getInterface(mw *MyMainWindow) (string, error) {
+func (mw *MyMainWindow) getInterface() (string, error) {
 	idx := mw.lb.CurrentIndex()
 	if idx < 0 {
 		return "", errors.New("インターフェイスを選択してください。")
@@ -155,7 +155,7 @@ func (mw *MyMainWindow) appendIp(ip string) {
 }
 
 func (mw *MyMainWindow) setStatic() {
-	iface, err := getInterface(mw)
+	iface, err := mw.getInterface()
 	if err != nil {
 		walk.MsgBox(mw, "エラー", fmt.Sprint(err), walk.MsgBoxIconError)
 		return
@@ -164,7 +164,7 @@ func (mw *MyMainWindow) setStatic() {
 }
 
 func (mw *MyMainWindow) setDhcp() {
-	iface, err := getInterface(mw)
+	iface, err := mw.getInterface()
 	if err != nil {
 		walk.MsgBox(mw, "エラー", fmt.Sprint(err), walk.MsgBoxIconError)
 		return
@@ -212,7 +212,7 @@ func main() {
 			PushButton{
 				Text: "インターフェイス一覧再取得",
 				OnClicked: func() {
-					go getInterfaces(mw)
+					go mw.getInterfaces()
 				},
 			},
 		},
@@ -228,7 +228,7 @@ func main() {
 	log.SetOutput(lv)
 	log.Println("winipset バージョン", version)
 
-	go getInterfaces(mw)
+	go mw.getInterfaces()
 
 	mw.Run()
 }
